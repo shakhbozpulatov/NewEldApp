@@ -1,5 +1,5 @@
 import { createWebHistory, createRouter } from 'vue-router'
-// import AuthRoutes from '@/modules/Auth/router'
+import AuthRoutes from '@/modules/Auth/router'
 // import { checkRouteIsExist } from './middleware'
 
 const router = createRouter({
@@ -10,22 +10,7 @@ const router = createRouter({
       component: () => import('@/layouts/Default/PIndex.vue'),
       children: [],
     },
-    // {
-    //   path: '/overview',
-    //   name: 'overview',
-    //   component: () => import('@/views/OverviewView.vue'),
-    // },
-    // {
-    //   path: '/vehicles',
-    //   name: 'vehicles',
-    //   component: () => import('@/views/VehiclesView.vue'),
-    // },
-    // {
-    //   path: '/drivers',
-    //   name: 'drivers',
-    //   component: () => import('@/views/DriversView.vue'),
-    // },
-    // ...AuthRoutes,
+    ...AuthRoutes,
     // {
     //   path: '/:pathMatch(.*)*',
     //   name: 'NotFound',

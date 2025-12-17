@@ -1,6 +1,6 @@
 <!-- src/components/layout/AppHeader.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import {
   Menu,
   Sun,
@@ -31,10 +31,30 @@ const emit = defineEmits<{
 
 const isDarkMode = ref(false)
 
+// Load dark mode from localStorage on mount
+onMounted(() => {
+  const savedMode = localStorage.getItem('dark-mode')
+  if (savedMode !== null) {
+    isDarkMode.value = JSON.parse(savedMode)
+  } else {
+    // Check system preference
+    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
+  applyDarkMode()
+})
+
+const applyDarkMode = () => {
+  if (isDarkMode.value) {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+  }
+}
+
 const toggleDarkMode = () => {
   isDarkMode.value = !isDarkMode.value
-  // Dark mode logic here
-  console.log('Dark mode:', isDarkMode.value)
+  localStorage.setItem('dark-mode', JSON.stringify(isDarkMode.value))
+  applyDarkMode()
 }
 
 const handleProfileClick = () => {
