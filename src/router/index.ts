@@ -10,6 +10,21 @@ const router = createRouter({
       component: () => import('@/layouts/Default/PIndex.vue'),
       children: [],
     },
+    // {
+    //   path: '/overview',
+    //   name: 'overview',
+    //   component: () => import('@/views/OverviewView.vue'),
+    // },
+    // {
+    //   path: '/vehicles',
+    //   name: 'vehicles',
+    //   component: () => import('@/views/VehiclesView.vue'),
+    // },
+    // {
+    //   path: '/drivers',
+    //   name: 'drivers',
+    //   component: () => import('@/views/DriversView.vue'),
+    // },
     // ...AuthRoutes,
     // {
     //   path: '/:pathMatch(.*)*',

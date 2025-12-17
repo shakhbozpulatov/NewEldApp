@@ -1,54 +1,105 @@
-<script lang="ts">
-export const description = 'A sidebar that collapses to icons.'
-export const iframeHeight = '800px'
-export const containerClass = 'w-full h-full'
-</script>
-
+<!-- src/layouts/MainLayout.vue -->
 <script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
 import AppSidebar from '@/layouts/Default/components/AppSidebar.vue'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
-import { Separator } from '@/components/ui/separator'
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import AppHeader from '@/layouts/Default/components/AppHeader.vue'
+
+const route = useRoute()
+const isSidebarOpen = ref(true)
+const isMobile = ref(false)
+
+// Check if mobile
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 1024
+  if (isMobile.value) {
+    isSidebarOpen.value = false
+  }
+}
+
+// Load sidebar state from localStorage
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+
+  const savedState = localStorage.getItem('sidebar-open')
+  if (savedState !== null && !isMobile.value) {
+    isSidebarOpen.value = JSON.parse(savedState)
+  }
+})
+
+// Save sidebar state to localStorage
+watch(isSidebarOpen, (newValue) => {
+  if (!isMobile.value) {
+    localStorage.setItem('sidebar-open', JSON.stringify(newValue))
+  }
+})
+
+// Close sidebar on mobile when route changes
+watch(
+  () => route.path,
+  () => {
+    if (isMobile.value) {
+      isSidebarOpen.value = false
+    }
+  }
+)
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value
+}
 </script>
 
 <template>
-  <SidebarProvider>
-    <AppSidebar />
-    <SidebarInset>
-      <header
-        class="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+  <div class="min-h-screen bg-gray-50">
+    <!-- Sidebar -->
+    <AppSidebar :is-open="isSidebarOpen" @update:is-open="isSidebarOpen = $event" />
+
+    <!-- Overlay for mobile -->
+    <Transition
+      enter-active-class="transition-opacity duration-300"
+      leave-active-class="transition-opacity duration-300"
+      enter-from-class="opacity-0"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="isSidebarOpen && isMobile"
+        class="fixed inset-0 bg-black/50 z-30 lg:hidden"
+        @click="isSidebarOpen = false"
+      />
+    </Transition>
+
+    <!-- Toggle Button - floats above sidebar -->
+    <div
+      v-if="isSidebarOpen"
+      class="fixed top-[12px] z-50 transition-all duration-300"
+      :class="[isSidebarOpen ? 'left-[228px]' : 'left-[-5px]']"
+    >
+      <Button
+        class="h-10 w-10 rounded-lg cursor-pointer bg-white border border-gray-300 shadow-md hover:bg-gray-50 hover:shadow-lg transition-all"
+        size="icon"
+        @click="toggleSidebar"
       >
-        <div class="flex items-center gap-2 px-4">
-          <SidebarTrigger class="-ml-1" />
-          <Separator orientation="vertical" class="mr-2 data-[orientation=vertical]:h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem class="hidden md:block">
-                <BreadcrumbLink href="#"> Building Your Application </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator class="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+        <div class="flex items-center justify-center">
+          <ChevronLeft class="w-4 h-4 text-gray-700" />
+          <ChevronRight class="w-4 h-4 text-gray-700 -ml-2" />
         </div>
-      </header>
-      <div class="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-          <div class="bg-muted/50 aspect-video rounded-xl" />
-          <div class="bg-muted/50 aspect-video rounded-xl" />
-          <div class="bg-muted/50 aspect-video rounded-xl" />
-        </div>
-        <div class="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+      </Button>
+    </div>
+
+    <!-- Header -->
+    <AppHeader :is-sidebar-open="isSidebarOpen" @toggle-sidebar="toggleSidebar" />
+
+    <!-- Main Content -->
+    <main
+      class="pt-[65px] transition-all duration-300"
+      :class="[isSidebarOpen ? 'lg:pl-[248px]' : 'lg:pl-0']"
+    >
+      <div class="p-6">
+        <slot />
       </div>
-    </SidebarInset>
-  </SidebarProvider>
+    </main>
+  </div>
 </template>
