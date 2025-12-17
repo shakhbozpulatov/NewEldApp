@@ -10,6 +10,12 @@ const router = createRouter({
       component: () => import('@/layouts/Default/PIndex.vue'),
       children: [],
     },
+    {
+      path: '/carriers',
+      name: 'Carriers',
+      component: () => import('@/layouts/Companies/PIndex.vue'),
+      children: [],
+    },
     ...AuthRoutes,
     // {
     //   path: '/:pathMatch(.*)*',
