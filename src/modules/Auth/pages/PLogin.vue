@@ -8,7 +8,7 @@
           <div class="w-[28px] h-[28px] rounded-lg flex items-center justify-center">
             <img src="/images/logo.svg" alt="Logo" />
           </div>
-          <h1 class="text-xl text-[#090909]">Union</h1>
+          <h1 class="text-xl text-[#090909]">Unione</h1>
         </div>
 
         <!-- Form -->

@@ -1,13 +1,94 @@
-<!-- src/layouts/shared/CarrierHeader.vue -->
+<template>
+  <header class="bg-white border-b border-gray-200">
+    <div class="px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 flex items-center justify-center">
+          <img src="/images/logo.svg" alt="Logo" />
+        </div>
+        <h1 class="text-xl text-gray-900">Unione</h1>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- Tabs Navigation -->
+        <Tabs :model-value="currentTab" @update:model-value="handleTabChange">
+          <TabsList class="bg-[#F0F0F0]">
+            <TabsTrigger
+              class="cursor-pointer text-[#666] data-[state=active]:font-medium data-[state=active]:text-[#090909] data-[state=active]:bg-white"
+              value="/initial/companies"
+            >
+              Companies
+            </TabsTrigger>
+            <TabsTrigger
+              class="cursor-pointer text-[#666] data-[state=active]:font-medium data-[state=active]:text-[#090909] data-[state=active]:bg-white"
+              value="/initial/clients"
+            >
+              Manage client
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <!-- Unione Team Button -->
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="secondary" class="cursor-pointer bg-[#F0F0F0]">
+              <span class="hidden sm:block text-sm font-medium text-gray-900">
+                {{ userInfo.name }}
+              </span>
+              <ChevronDown class="w-4 h-4 text-gray-500 hidden sm:block" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" class="w-34">
+            <DropdownMenuItem class="cursor-pointer focus:bg-gray-100">
+              <User class="w-4 h-4 mr-3 text-gray-600" />
+              <span class="text-gray-900">{{ userInfo.id }}</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              @click="handleLogout"
+              class="cursor-pointer focus:bg-gray-100 focus:text-gray-900"
+            >
+              <LogOut class="w-4 h-4 mr-3 text-gray-600" />
+              <span class="text-gray-900">Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  </header>
+</template>
+
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { User, LogOut, ChevronDown } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 const route = useRoute()
 const router = useRouter()
 
 const currentTab = computed(() => route.path)
+
+const userInfo = ref({
+  id: '001',
+  name: 'Unione team',
+  email: 'walt@disney.com',
+})
+
+const handleLogout = () => {
+  // Clear auth token
+  localStorage.removeItem('auth-token')
+
+  // Redirect to login
+  router.push('/login')
+}
 
 const handleTabChange = (value: string | number) => {
   if (typeof value === 'string' && value !== route.path) {
@@ -15,41 +96,3 @@ const handleTabChange = (value: string | number) => {
   }
 }
 </script>
-
-<template>
-  <header class="bg-white border-b border-gray-200">
-    <div class="px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
-          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-          </svg>
-        </div>
-        <h1 class="text-xl font-semibold text-gray-900">Union</h1>
-      </div>
-
-      <div class="flex items-center gap-4">
-        <!-- Tabs Navigation -->
-        <Tabs :model-value="currentTab" @update:model-value="handleTabChange">
-          <TabsList class="bg-transparent border-0 h-auto p-0 gap-4">
-            <TabsTrigger
-              value="/initial/companies"
-              class="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-gray-900 rounded-none px-0 pb-1"
-            >
-              Companies
-            </TabsTrigger>
-            <TabsTrigger
-              value="/initial/clients"
-              class="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-gray-900 rounded-none px-0 pb-1"
-            >
-              Manage client
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        <!-- Union Team Button -->
-        <button class="text-sm font-medium text-gray-500 hover:text-gray-700">Union team</button>
-      </div>
-    </div>
-  </header>
-</template>
