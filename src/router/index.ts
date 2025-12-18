@@ -1,6 +1,6 @@
 import { createWebHistory, createRouter } from 'vue-router'
 import AuthRoutes from '@/modules/Auth/router'
-// import { checkRouteIsExist } from './middleware'
+import { authMiddleware } from './middleware'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -14,7 +14,7 @@ const router = createRouter({
       path: '/initial',
       name: 'Initial',
       component: () => import('@/layouts/Initial/PIndex.vue'),
-      redirect: { name: 'Companies' },
+      redirect: '/initial/companies',
       children: [
         {
           path: 'companies',
@@ -37,6 +37,7 @@ const router = createRouter({
   ],
 })
 
-// router.beforeEach(checkRouteIsExist)
+// Apply authentication middleware
+router.beforeEach(authMiddleware)
 
 export default router
