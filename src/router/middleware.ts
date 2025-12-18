@@ -4,18 +4,10 @@ import { useAuthStore } from '@/modules/Auth/store/authStore'
 // Public routes that don't require authentication
 const publicRoutes = ['Login']
 
-// Public paths that don't require authentication
-const publicPaths = ['/login']
-
 // Check if route requires authentication
 const requiresAuth = (route: RouteLocationNormalized): boolean => {
   // Check by route name
   if (route.name && publicRoutes.includes(route.name as string)) {
-    return false
-  }
-
-  // Check by path
-  if (publicPaths.includes(route.path)) {
     return false
   }
 

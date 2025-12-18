@@ -70,9 +70,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useAuthStore } from '@/modules/Auth/store/authStore'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 
 const currentTab = computed(() => route.path)
 
@@ -82,15 +84,12 @@ const userInfo = ref({
   email: 'walt@disney.com',
 })
 
-const handleLogout = () => {
-  // Clear auth token
-  localStorage.removeItem('auth-token')
-
-  // Redirect to login
-  router.push('/login')
+const handleLogout = async () => {
+  // Use authStore logout method to clear all auth data
+  await authStore.logout()
 }
 
-const handleTabChange = (value: string | number) => {
+const handleTabChange = (value) => {
   if (typeof value === 'string' && value !== route.path) {
     router.push(value)
   }

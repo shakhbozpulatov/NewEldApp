@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Documentation files (internal only, not for git)
+# Ignore all .md files except root README.md
+**/*.md
+!/README.md

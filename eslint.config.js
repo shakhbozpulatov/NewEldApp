@@ -30,7 +30,8 @@ export default [
       ...typescript.configs.recommended.rules,
       ...prettierConfig.rules,
       'prettier/prettier': 'warn',
-      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
@@ -44,4 +45,25 @@ export default [
     },
   },
   ...vue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: typescriptParser,
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'vue/multi-word-component-names': 'off',
+      'vue/no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      'vue/max-attributes-per-line': 'off',
+      'vue/first-attribute-linebreak': 'off',
+      'vue/html-self-closing': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/attributes-order': 'off',
+    },
+  },
 ]

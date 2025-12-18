@@ -20,7 +20,7 @@
             </div>
 
             <!-- Create Company Button -->
-            <Button @click="isCreateModalOpen = true" class="bg-gray-900 hover:bg-gray-800">
+            <Button @click="openCreateModal" class="bg-gray-900 hover:bg-gray-800">
               Create Company
             </Button>
           </div>
@@ -61,11 +61,11 @@
               </TableHead>
               <TableHead>
                 <button
-                  @click="handleSort('address')"
+                  @click="handleSort('company')"
                   class="flex items-center gap-2 font-medium hover:text-gray-900"
                 >
-                  Address
-                  <component :is="getSortIcon('address')" class="w-4 h-4" />
+                  Provider
+                  <component :is="getSortIcon('company')" class="w-4 h-4" />
                 </button>
               </TableHead>
               <TableHead class="text-right">
@@ -86,11 +86,11 @@
               @click="handleRowClick(company)"
               class="cursor-pointer hover:bg-gray-50 transition-colors"
             >
-              <TableCell class="font-medium">{{ company.id }}</TableCell>
+              <TableCell class="font-medium">{{ getDisplayId() }}</TableCell>
               <TableCell>{{ company.name }}</TableCell>
-              <TableCell>{{ company.usdot }}</TableCell>
-              <TableCell>{{ company.address }}</TableCell>
-              <TableCell class="text-right">{{ company.timezone }}</TableCell>
+              <TableCell>{{ company.usdotNumber || '-' }}</TableCell>
+              <TableCell>{{ company.company }}</TableCell>
+              <TableCell class="text-right">{{ company.timeZone || '-' }}</TableCell>
             </TableRow>
 
             <!-- No results -->
@@ -173,16 +173,15 @@
     <!-- Create Company Modal -->
     <CreateCompanyModal
       :open="isCreateModalOpen"
-      @close="isCreateModalOpen = false"
+      @close="closeCreateModal"
       @submit="handleCreateCompany"
     />
   </div>
 </template>
 <!-- src/views/CompaniesView.vue -->
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next'
+import { Search, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -201,314 +200,33 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import CreateCompanyModal from '../components/CreateCompanyModal.vue'
+import { useCompanies } from '../composables/useCompanies'
+import type { CompanyTableItem } from '@/types/company.ts'
 
 const router = useRouter()
 
-interface Company {
-  id: number
-  name: string
-  usdot: string
-  address: string
-  timezone: string
-  createdAt: Date
-}
+// Use companies composable - contains all business logic
+const {
+  searchCompany,
+  searchUsdot,
+  itemsPerPage,
+  currentPage,
+  totalPages,
+  totalEntries,
+  pageNumbers,
+  paginatedCompanies,
+  isCreateModalOpen,
+  handleSort,
+  goToPage,
+  getSortIcon,
+  getDisplayId,
+  handleCreateCompany,
+  openCreateModal,
+  closeCreateModal,
+} = useCompanies()
 
-// Mock data
-const allCompanies = ref<Company[]>([
-  {
-    id: 1,
-    name: 'IBM',
-    usdot: '16415',
-    address: '8558 Green Rd.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 2,
-    name: 'Louis Vuitton',
-    usdot: '70443',
-    address: '775 Rolling Green Rd.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 3,
-    name: "McDonald's",
-    usdot: '39235',
-    address: '8080 Railroad St.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 4,
-    name: 'The Walt Disney Company',
-    usdot: '95554',
-    address: '7529 E. Pecan St.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 5,
-    name: 'eBay',
-    usdot: '28200',
-    address: '7529 E. Pecan St.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 6,
-    name: 'eBay',
-    usdot: '74875',
-    address: '775 Rolling Green Rd.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 7,
-    name: 'Gillette',
-    usdot: '9631',
-    address: '8558 Green Rd.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 8,
-    name: 'Starbucks',
-    usdot: '45904',
-    address: '3890 Poplar Dr.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 9,
-    name: 'MasterCard',
-    usdot: '20079',
-    address: '8080 Railroad St.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 10,
-    name: 'Starbucks',
-    usdot: '3398',
-    address: '3890 Poplar Dr.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 11,
-    name: 'Pizza Hut',
-    usdot: '20796',
-    address: '3605 Parker Rd.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 12,
-    name: 'IBM',
-    usdot: '13671',
-    address: '8080 Railroad St.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 13,
-    name: 'Johnson & Johnson',
-    usdot: '4339',
-    address: '7529 E. Pecan St.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 14,
-    name: 'The Walt Disney Company',
-    usdot: '50963',
-    address: '7529 E. Pecan St.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 15,
-    name: 'Facebook',
-    usdot: '10708',
-    address: '7529 E. Pecan St.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 16,
-    name: 'Sony',
-    usdot: '83676',
-    address: '3605 Parker Rd.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 17,
-    name: "McDonald's",
-    usdot: '93457',
-    address: '7529 E. Pecan St.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 18,
-    name: "McDonald's",
-    usdot: '93457',
-    address: '7529 E. Pecan St.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  {
-    id: 19,
-    name: "McDonald's",
-    usdot: '93457',
-    address: '7529 E. Pecan St.',
-    timezone: 'Jan 07, 10:09 PM',
-    createdAt: new Date('2025-01-07T22:09:00'),
-  },
-  // Add more mock data as needed
-])
-
-// Search filters
-const searchCompany = ref('')
-const searchUsdot = ref('')
-const itemsPerPage = ref(10)
-const currentPage = ref(1)
-
-// Sorting
-type SortKey = 'id' | 'name' | 'usdot' | 'address' | 'timezone'
-const sortKey = ref<SortKey>('id')
-const sortOrder = ref<'asc' | 'desc'>('asc')
-
-// Modal
-const isCreateModalOpen = ref(false)
-
-// Debounced search
-const debouncedSearchCompany = ref('')
-const debouncedSearchUsdot = ref('')
-let searchTimeout: number
-
-watch([searchCompany, searchUsdot], () => {
-  if (searchTimeout) clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    debouncedSearchCompany.value = searchCompany.value
-    debouncedSearchUsdot.value = searchUsdot.value
-    currentPage.value = 1
-  }, 300)
-})
-
-// Filtered companies
-const filteredCompanies = computed(() => {
-  let filtered = allCompanies.value
-
-  // Filter by company name
-  if (debouncedSearchCompany.value) {
-    filtered = filtered.filter((company) =>
-      company.name.toLowerCase().includes(debouncedSearchCompany.value.toLowerCase())
-    )
-  }
-
-  // Filter by USDOT
-  if (debouncedSearchUsdot.value) {
-    filtered = filtered.filter((company) => company.usdot.includes(debouncedSearchUsdot.value))
-  }
-
-  // Sort
-  filtered.sort((a, b) => {
-    let aVal: any = a[sortKey.value]
-    let bVal: any = b[sortKey.value]
-
-    // Convert to numbers for numeric fields
-    if (sortKey.value === 'id' || sortKey.value === 'usdot') {
-      aVal = Number(aVal)
-      bVal = Number(bVal)
-    }
-
-    if (aVal < bVal) return sortOrder.value === 'asc' ? -1 : 1
-    if (aVal > bVal) return sortOrder.value === 'asc' ? 1 : -1
-    return 0
-  })
-
-  return filtered
-})
-
-// Paginated companies
-const paginatedCompanies = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  return filteredCompanies.value.slice(start, end)
-})
-
-// Pagination info
-const totalPages = computed(() => Math.ceil(filteredCompanies.value.length / itemsPerPage.value))
-const totalEntries = computed(() => filteredCompanies.value.length)
-
-const pageNumbers = computed(() => {
-  const pages: (number | string)[] = []
-  const maxVisible = 5
-
-  if (totalPages.value <= maxVisible + 2) {
-    for (let i = 1; i <= totalPages.value; i++) {
-      pages.push(i)
-    }
-  } else {
-    pages.push(1)
-
-    if (currentPage.value > 3) {
-      pages.push('...')
-    }
-
-    for (
-      let i = Math.max(2, currentPage.value - 1);
-      i <= Math.min(totalPages.value - 1, currentPage.value + 1);
-      i++
-    ) {
-      pages.push(i)
-    }
-
-    if (currentPage.value < totalPages.value - 2) {
-      pages.push('...')
-    }
-
-    pages.push(totalPages.value)
-  }
-
-  return pages
-})
-
-// Functions
-const handleSort = (key: SortKey) => {
-  if (sortKey.value === key) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortKey.value = key
-    sortOrder.value = 'asc'
-  }
-}
-
-const goToPage = (page: number) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
-}
-
-const handleRowClick = (company: Company) => {
+// Navigation
+const handleRowClick = (company: CompanyTableItem) => {
   router.push(`/overview?company=${company.id}`)
-}
-
-const handleCreateCompany = (newCompany: Omit<Company, 'id' | 'createdAt'>) => {
-  const company: Company = {
-    id: allCompanies.value.length + 1,
-    ...newCompany,
-    createdAt: new Date(),
-  }
-  allCompanies.value.unshift(company)
-  isCreateModalOpen.value = false
-}
-
-const getSortIcon = (key: SortKey) => {
-  if (sortKey.value !== key) return ArrowUpDown
-  return sortOrder.value === 'asc' ? ArrowUp : ArrowDown
 }
 </script>

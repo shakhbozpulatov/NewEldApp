@@ -1,176 +1,9 @@
-<!-- src/components/modals/CreateCompanyModal.vue -->
-<script setup lang="ts">
-import { ref, watch } from 'vue'
-import { X } from 'lucide-vue-next'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-
-interface Props {
-  open: boolean
-}
-
-interface FormData {
-  name: string
-  phone: string
-  usdot: string
-  address: string
-  homeTerminalAddress: string
-  email: string
-  issuerStateParent: string
-  issuerState: string
-  zipcode: string
-  timezone: string
-}
-
-const props = defineProps<Props>()
-const emit = defineEmits<{
-  (e: 'close'): void
-  (
-    e: 'submit',
-    data: Omit<
-      FormData,
-      'phone' | 'homeTerminalAddress' | 'email' | 'issuerStateParent' | 'issuerState' | 'zipcode'
-    >
-  ): void
-}>()
-
-const formData = ref<FormData>({
-  name: '',
-  phone: '',
-  usdot: '',
-  address: '',
-  homeTerminalAddress: '',
-  email: '',
-  issuerStateParent: '',
-  issuerState: '',
-  zipcode: '',
-  timezone: 'EDT',
-})
-
-const errors = ref<Partial<Record<keyof FormData, string>>>({})
-const isSubmitting = ref(false)
-
-// Reset form when modal opens/closes
-watch(
-  () => props.open,
-  (isOpen) => {
-    if (!isOpen) {
-      resetForm()
-    }
-  }
-)
-
-const resetForm = () => {
-  formData.value = {
-    name: '',
-    phone: '',
-    usdot: '',
-    address: '',
-    homeTerminalAddress: '',
-    email: '',
-    issuerStateParent: '',
-    issuerState: '',
-    zipcode: '',
-    timezone: 'EDT',
-  }
-  errors.value = {}
-}
-
-const validateForm = (): boolean => {
-  errors.value = {}
-  let isValid = true
-
-  // Required fields
-  if (!formData.value.name.trim()) {
-    errors.value.name = 'Company name is required'
-    isValid = false
-  }
-
-  if (!formData.value.usdot.trim()) {
-    errors.value.usdot = 'USDOT is required'
-    isValid = false
-  } else if (!/^\d+$/.test(formData.value.usdot)) {
-    errors.value.usdot = 'USDOT must be numeric'
-    isValid = false
-  }
-
-  if (!formData.value.address.trim()) {
-    errors.value.address = 'Company address is required'
-    isValid = false
-  }
-
-  // Email validation if provided
-  if (formData.value.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.email)) {
-    errors.value.email = 'Invalid email format'
-    isValid = false
-  }
-
-  // Phone validation if provided
-  if (formData.value.phone && !/^\+?[\d\s-()]+$/.test(formData.value.phone)) {
-    errors.value.phone = 'Invalid phone format'
-    isValid = false
-  }
-
-  // Zipcode validation if provided
-  if (formData.value.zipcode && !/^\d{5}(-\d{4})?$/.test(formData.value.zipcode)) {
-    errors.value.zipcode = 'Invalid zipcode format'
-    isValid = false
-  }
-
-  return isValid
-}
-
-const handleSubmit = async () => {
-  if (!validateForm()) {
-    return
-  }
-
-  isSubmitting.value = true
-
-  try {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    emit('submit', {
-      name: formData.value.name,
-      usdot: formData.value.usdot,
-      address: formData.value.address,
-      timezone: `Jan 07, 10:09 PM`, // Mock timezone display
-    })
-  } catch (error) {
-    console.error('Error creating company:', error)
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-const handleClose = () => {
-  if (!isSubmitting.value) {
-    emit('close')
-  }
-}
-
-const clearError = (field: keyof FormData) => {
-  delete errors.value[field]
-}
-</script>
-
 <template>
-  <Dialog :open="open" @update:open="handleClose">
-    <DialogContent class="max-w-3xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle class="text-2xl font-semibold">Create company</DialogTitle>
-      </DialogHeader>
+  <Modal :open="open" @update:open="handleClose">
+    <ModalContent max-width="3xl">
+      <ModalHeader>
+        <ModalTitle class="text-2xl font-semibold">Create company</ModalTitle>
+      </ModalHeader>
 
       <form @submit.prevent="handleSubmit" class="space-y-6 mt-4">
         <!-- Row 1 -->
@@ -337,7 +170,7 @@ const clearError = (field: keyof FormData) => {
         </div>
 
         <!-- Actions -->
-        <div class="flex justify-end gap-3 pt-4">
+        <ModalFooter class="pt-4">
           <Button type="button" variant="outline" @click="handleClose" :disabled="isSubmitting">
             Cancel
           </Button>
@@ -367,8 +200,172 @@ const clearError = (field: keyof FormData) => {
               Saving...
             </span>
           </Button>
-        </div>
+        </ModalFooter>
       </form>
-    </DialogContent>
-  </Dialog>
+    </ModalContent>
+  </Modal>
 </template>
+<script setup lang="ts">
+import { ref, watch } from 'vue'
+import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter } from '@/components/modal'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+
+interface Props {
+  open: boolean
+}
+
+interface FormData {
+  name: string
+  phone: string
+  usdot: string
+  address: string
+  homeTerminalAddress: string
+  email: string
+  issuerStateParent: string
+  issuerState: string
+  zipcode: string
+  timezone: string
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<{
+  (e: 'close'): void
+  (
+    e: 'submit',
+    data: Omit<
+      FormData,
+      'phone' | 'homeTerminalAddress' | 'email' | 'issuerStateParent' | 'issuerState' | 'zipcode'
+    >
+  ): void
+}>()
+
+const formData = ref<FormData>({
+  name: '',
+  phone: '',
+  usdot: '',
+  address: '',
+  homeTerminalAddress: '',
+  email: '',
+  issuerStateParent: '',
+  issuerState: '',
+  zipcode: '',
+  timezone: 'EDT',
+})
+
+const errors = ref<Partial<Record<keyof FormData, string>>>({})
+const isSubmitting = ref(false)
+
+// Reset form when modal opens/closes
+watch(
+  () => props.open,
+  (isOpen) => {
+    if (!isOpen) {
+      resetForm()
+    }
+  }
+)
+
+const resetForm = () => {
+  formData.value = {
+    name: '',
+    phone: '',
+    usdot: '',
+    address: '',
+    homeTerminalAddress: '',
+    email: '',
+    issuerStateParent: '',
+    issuerState: '',
+    zipcode: '',
+    timezone: 'EDT',
+  }
+  errors.value = {}
+}
+
+const validateForm = (): boolean => {
+  errors.value = {}
+  let isValid = true
+
+  // Required fields
+  if (!formData.value.name.trim()) {
+    errors.value.name = 'Company name is required'
+    isValid = false
+  }
+
+  if (!formData.value.usdot.trim()) {
+    errors.value.usdot = 'USDOT is required'
+    isValid = false
+  } else if (!/^\d+$/.test(formData.value.usdot)) {
+    errors.value.usdot = 'USDOT must be numeric'
+    isValid = false
+  }
+
+  if (!formData.value.address.trim()) {
+    errors.value.address = 'Company address is required'
+    isValid = false
+  }
+
+  // Email validation if provided
+  if (formData.value.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.email)) {
+    errors.value.email = 'Invalid email format'
+    isValid = false
+  }
+
+  // Phone validation if provided
+  if (formData.value.phone && !/^\+?[\d\s-()]+$/.test(formData.value.phone)) {
+    errors.value.phone = 'Invalid phone format'
+    isValid = false
+  }
+
+  // Zipcode validation if provided
+  if (formData.value.zipcode && !/^\d{5}(-\d{4})?$/.test(formData.value.zipcode)) {
+    errors.value.zipcode = 'Invalid zipcode format'
+    isValid = false
+  }
+
+  return isValid
+}
+
+const handleSubmit = async () => {
+  if (!validateForm()) {
+    return
+  }
+
+  isSubmitting.value = true
+
+  try {
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    emit('submit', {
+      name: formData.value.name,
+      usdot: formData.value.usdot,
+      address: formData.value.address,
+      timezone: `Jan 07, 10:09 PM`, // Mock timezone display
+    })
+  } catch (error) {
+    console.error('Error creating company:', error)
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const handleClose = () => {
+  if (!isSubmitting.value) {
+    emit('close')
+  }
+}
+
+const clearError = (field: keyof FormData) => {
+  delete errors.value[field]
+}
+</script>
