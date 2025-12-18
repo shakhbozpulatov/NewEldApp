@@ -1,201 +1,174 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white border-b border-gray-200">
-      <div class="px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-            </svg>
-          </div>
-          <h1 class="text-xl font-semibold text-gray-900">Union</h1>
-        </div>
+  <div>
+    <div class="bg-white rounded-lg shadow-sm">
+      <!-- Title and Actions -->
+      <div class="px-6 py-5 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-semibold text-gray-900">Companies</h2>
 
-        <div class="flex items-center gap-4">
-          <button class="text-sm font-medium text-gray-900 hover:text-gray-700">Companies</button>
-          <button class="text-sm font-medium text-gray-500 hover:text-gray-700">
-            Manage client
-          </button>
-          <button class="text-sm font-medium text-gray-500 hover:text-gray-700">Union team</button>
+          <div class="flex items-center gap-3">
+            <!-- Search Company -->
+            <div class="relative">
+              <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input v-model="searchCompany" placeholder="Search company" class="pl-9 w-64" />
+            </div>
+
+            <!-- Search USDOT -->
+            <div class="relative">
+              <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input v-model="searchUsdot" placeholder="Search USDOT" class="pl-9 w-64" />
+            </div>
+
+            <!-- Create Company Button -->
+            <Button @click="isCreateModalOpen = true" class="bg-gray-900 hover:bg-gray-800">
+              Create Company
+            </Button>
+          </div>
         </div>
       </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="p-6">
-      <div class="bg-white rounded-lg shadow-sm">
-        <!-- Title and Actions -->
-        <div class="px-6 py-5 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <h2 class="text-2xl font-semibold text-gray-900">Companies</h2>
+      <!-- Table -->
+      <div class="overflow-x-auto max-h-[calc(100vh-280px)] overflow-y-auto">
+        <Table class="relative">
+          <TableHeader class="sticky top-0 z-10 bg-gray-50">
+            <TableRow class="bg-gray-50">
+              <TableHead class="w-20">
+                <button
+                  @click="handleSort('id')"
+                  class="flex items-center gap-2 font-medium hover:text-gray-900"
+                >
+                  No
+                  <component :is="getSortIcon('id')" class="w-4 h-4" />
+                </button>
+              </TableHead>
+              <TableHead>
+                <button
+                  @click="handleSort('name')"
+                  class="flex items-center gap-2 font-medium hover:text-gray-900"
+                >
+                  Company name
+                  <component :is="getSortIcon('name')" class="w-4 h-4" />
+                </button>
+              </TableHead>
+              <TableHead>
+                <button
+                  @click="handleSort('usdot')"
+                  class="flex items-center gap-2 font-medium hover:text-gray-900"
+                >
+                  USDOT
+                  <component :is="getSortIcon('usdot')" class="w-4 h-4" />
+                </button>
+              </TableHead>
+              <TableHead>
+                <button
+                  @click="handleSort('address')"
+                  class="flex items-center gap-2 font-medium hover:text-gray-900"
+                >
+                  Address
+                  <component :is="getSortIcon('address')" class="w-4 h-4" />
+                </button>
+              </TableHead>
+              <TableHead class="text-right">
+                <button
+                  @click="handleSort('timezone')"
+                  class="flex items-center gap-2 font-medium hover:text-gray-900 ml-auto"
+                >
+                  Time zone
+                  <component :is="getSortIcon('timezone')" class="w-4 h-4" />
+                </button>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow
+              v-for="company in paginatedCompanies"
+              :key="company.id"
+              @click="handleRowClick(company)"
+              class="cursor-pointer hover:bg-gray-50 transition-colors"
+            >
+              <TableCell class="font-medium">{{ company.id }}</TableCell>
+              <TableCell>{{ company.name }}</TableCell>
+              <TableCell>{{ company.usdot }}</TableCell>
+              <TableCell>{{ company.address }}</TableCell>
+              <TableCell class="text-right">{{ company.timezone }}</TableCell>
+            </TableRow>
 
-            <div class="flex items-center gap-3">
-              <!-- Search Company -->
-              <div class="relative">
-                <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input v-model="searchCompany" placeholder="Search company" class="pl-9 w-64" />
-              </div>
+            <!-- No results -->
+            <TableRow v-if="paginatedCompanies.length === 0">
+              <TableCell colspan="5" class="text-center py-8 text-gray-500">
+                No companies found
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
 
-              <!-- Search USDOT -->
-              <div class="relative">
-                <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input v-model="searchUsdot" placeholder="Search USDOT" class="pl-9 w-64" />
-              </div>
+      <!-- Footer / Pagination -->
+      <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+        <!-- Items per page -->
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-gray-600">Display on page</span>
+          <Select v-model="itemsPerPage">
+            <SelectTrigger class="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem :value="10">10</SelectItem>
+              <SelectItem :value="25">25</SelectItem>
+              <SelectItem :value="50">50</SelectItem>
+              <SelectItem :value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+          <span class="text-sm text-gray-600"> {{ totalEntries }} entries </span>
+        </div>
 
-              <!-- Create Company Button -->
-              <Button @click="isCreateModalOpen = true" class="bg-gray-900 hover:bg-gray-800">
-                Create Company
+        <!-- Pagination -->
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1">
+            <button
+              v-for="page in pageNumbers"
+              :key="page"
+              @click="typeof page === 'number' && goToPage(page)"
+              :disabled="page === '...'"
+              :class="[
+                'min-w-[32px] h-8 px-2 text-sm font-medium rounded transition-colors',
+                page === currentPage
+                  ? 'bg-gray-900 text-white'
+                  : page === '...'
+                    ? 'text-gray-400 cursor-default'
+                    : 'text-gray-700 hover:bg-gray-100',
+              ]"
+            >
+              {{ page }}
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2 ml-4">
+            <span class="text-sm text-gray-600"> {{ currentPage }} of {{ totalPages }} pages </span>
+            <div class="flex gap-1">
+              <Button
+                @click="goToPage(currentPage - 1)"
+                :disabled="currentPage === 1"
+                variant="outline"
+                size="icon"
+                class="h-8 w-8"
+              >
+                <ChevronLeft class="w-4 h-4" />
+              </Button>
+              <Button
+                @click="goToPage(currentPage + 1)"
+                :disabled="currentPage === totalPages"
+                variant="outline"
+                size="icon"
+                class="h-8 w-8"
+              >
+                <ChevronRight class="w-4 h-4" />
               </Button>
             </div>
           </div>
         </div>
-
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow class="bg-gray-50">
-                <TableHead class="w-20">
-                  <button
-                    @click="handleSort('id')"
-                    class="flex items-center gap-2 font-medium hover:text-gray-900"
-                  >
-                    No
-                    <component :is="getSortIcon('id')" class="w-4 h-4" />
-                  </button>
-                </TableHead>
-                <TableHead>
-                  <button
-                    @click="handleSort('name')"
-                    class="flex items-center gap-2 font-medium hover:text-gray-900"
-                  >
-                    Company name
-                    <component :is="getSortIcon('name')" class="w-4 h-4" />
-                  </button>
-                </TableHead>
-                <TableHead>
-                  <button
-                    @click="handleSort('usdot')"
-                    class="flex items-center gap-2 font-medium hover:text-gray-900"
-                  >
-                    USDOT
-                    <component :is="getSortIcon('usdot')" class="w-4 h-4" />
-                  </button>
-                </TableHead>
-                <TableHead>
-                  <button
-                    @click="handleSort('address')"
-                    class="flex items-center gap-2 font-medium hover:text-gray-900"
-                  >
-                    Address
-                    <component :is="getSortIcon('address')" class="w-4 h-4" />
-                  </button>
-                </TableHead>
-                <TableHead class="text-right">
-                  <button
-                    @click="handleSort('timezone')"
-                    class="flex items-center gap-2 font-medium hover:text-gray-900 ml-auto"
-                  >
-                    Time zone
-                    <component :is="getSortIcon('timezone')" class="w-4 h-4" />
-                  </button>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow
-                v-for="company in paginatedCompanies"
-                :key="company.id"
-                @click="handleRowClick(company)"
-                class="cursor-pointer hover:bg-gray-50 transition-colors"
-              >
-                <TableCell class="font-medium">{{ company.id }}</TableCell>
-                <TableCell>{{ company.name }}</TableCell>
-                <TableCell>{{ company.usdot }}</TableCell>
-                <TableCell>{{ company.address }}</TableCell>
-                <TableCell class="text-right">{{ company.timezone }}</TableCell>
-              </TableRow>
-
-              <!-- No results -->
-              <TableRow v-if="paginatedCompanies.length === 0">
-                <TableCell colspan="5" class="text-center py-8 text-gray-500">
-                  No companies found
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-
-        <!-- Footer / Pagination -->
-        <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <!-- Items per page -->
-          <div class="flex items-center gap-3">
-            <span class="text-sm text-gray-600">Display on page</span>
-            <Select v-model="itemsPerPage">
-              <SelectTrigger class="w-20">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem :value="10">10</SelectItem>
-                <SelectItem :value="25">25</SelectItem>
-                <SelectItem :value="50">50</SelectItem>
-                <SelectItem :value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-            <span class="text-sm text-gray-600"> {{ totalEntries }} entries </span>
-          </div>
-
-          <!-- Pagination -->
-          <div class="flex items-center gap-2">
-            <div class="flex items-center gap-1">
-              <button
-                v-for="page in pageNumbers"
-                :key="page"
-                @click="typeof page === 'number' && goToPage(page)"
-                :disabled="page === '...'"
-                :class="[
-                  'min-w-[32px] h-8 px-2 text-sm font-medium rounded transition-colors',
-                  page === currentPage
-                    ? 'bg-gray-900 text-white'
-                    : page === '...'
-                      ? 'text-gray-400 cursor-default'
-                      : 'text-gray-700 hover:bg-gray-100',
-                ]"
-              >
-                {{ page }}
-              </button>
-            </div>
-
-            <div class="flex items-center gap-2 ml-4">
-              <span class="text-sm text-gray-600">
-                {{ currentPage }} of {{ totalPages }} pages
-              </span>
-              <div class="flex gap-1">
-                <Button
-                  @click="goToPage(currentPage - 1)"
-                  :disabled="currentPage === 1"
-                  variant="outline"
-                  size="icon"
-                  class="h-8 w-8"
-                >
-                  <ChevronLeft class="w-4 h-4" />
-                </Button>
-                <Button
-                  @click="goToPage(currentPage + 1)"
-                  :disabled="currentPage === totalPages"
-                  variant="outline"
-                  size="icon"
-                  class="h-8 w-8"
-                >
-                  <ChevronRight class="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-    </main>
+    </div>
 
     <!-- Create Company Modal -->
     <CreateCompanyModal
@@ -209,15 +182,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  Search,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from 'lucide-vue-next'
+import { Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -235,7 +200,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import CreateCompanyModal from '@/layouts/Companies/components/CreateCompanyModal.vue'
+import CreateCompanyModal from '../components/CreateCompanyModal.vue'
 
 const router = useRouter()
 

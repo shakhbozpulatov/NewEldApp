@@ -152,7 +152,7 @@ const handleSubmit = async () => {
       localStorage.setItem('auth-token', 'mock-token-12345')
 
       // Redirect to dashboard
-      await router.push('/')
+      await router.push({ name: 'Initial' })
     } else {
       // Show error
       toast.error('Login Failed', {

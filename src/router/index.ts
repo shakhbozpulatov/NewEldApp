@@ -11,10 +11,22 @@ const router = createRouter({
       children: [],
     },
     {
-      path: '/carriers',
-      name: 'Carriers',
-      component: () => import('@/layouts/Companies/PIndex.vue'),
-      children: [],
+      path: '/initial',
+      name: 'Initial',
+      component: () => import('@/layouts/Initial/PIndex.vue'),
+      redirect: { name: 'Companies' },
+      children: [
+        {
+          path: 'companies',
+          name: 'Companies',
+          component: () => import('@/layouts/Initial/pages/PCompanies.vue'),
+        },
+        {
+          path: 'clients',
+          name: 'Clients',
+          component: () => import('@/layouts/Initial/pages/PClients.vue'),
+        },
+      ],
     },
     ...AuthRoutes,
     // {
